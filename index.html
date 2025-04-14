@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tạo Avatar với Khung - THPT Chuyên Vĩnh Phúc</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; background: #f0f0f0; padding: 2rem; }
+    canvas { border-radius: 50%; margin: 1rem auto; display: block; }
+    input[type="file"] { margin-top: 1rem; }
+    button { margin-top: 1rem; padding: 0.5rem 1rem; font-size: 1rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Tạo Avatar 20 năm THPT Chuyên Vĩnh Phúc</h1>
+  <p>Upload ảnh cá nhân của bạn để tạo avatar có khung kỷ niệm 20 năm.</p>
+
+  <input type="file" id="upload" accept="image/*">
+  <canvas id="canvas" width="768" height="768"></canvas>
+  <br>
+  <button onclick="downloadImage()">Tải Avatar Về</button>
+
+  <script>
+    const upload = document.getElementById('upload');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    const frame = new Image();
+    frame.src = 'Design.png'; // Đường dẫn file khung bạn đã upload
+
+    upload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          // Clear canvas
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Fill background (optional): ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Draw uploaded image (crop center square)
+          const size = Math.min(img.width, img.height);
+          const sx = (img.width - size) / 2;
+          const sy = (img.height - size) / 2;
+          ctx.drawImage(img, sx, sy, size, size, 0, 0, canvas.width, canvas.height);
+
+          // Draw frame overlay
+          frame.onload = () => {
+            ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+          }
+          if (frame.complete) ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+        }
+        img.src = event.target.result;
+      }
+      reader.readAsDataURL(file);
+    });
+
+    function downloadImage() {
+      const link = document.createElement('a');
+      link.download = 'avatar-20nam.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+  </script>
+</body>
+</html>
