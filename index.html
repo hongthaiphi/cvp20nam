@@ -1,87 +1,147 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tạo Avatar với Khung - THPT Chuyên Vĩnh Phúc</title>
+  <title>Chọn Frame Kỷ Niệm</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
+      padding: 1rem;
       text-align: center;
-      background: #f0f0f0;
-      padding: 2rem;
-      margin: 0;
     }
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
+    .frame-preview {
+      max-width: 120px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      border-radius: 10px;
+      margin: 0.5rem;
+      transition: border 0.3s;
+    }
+    .frame-preview.selected {
+      border: 2px solid #007bff;
     }
     canvas {
       width: 100%;
       max-width: 400px;
       height: auto;
-      border-radius: 50%;
-      margin: 1rem auto;
-      display: block;
-    }
-    input[type="file"] {
       margin-top: 1rem;
+    }
+    .file-upload {
+      margin-top: 1rem;
+      display: inline-block;
+      position: relative;
+    }
+    .file-upload input[type="file"] {
+      display: none;
+    }
+    .file-upload-label {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display: inline-block;
     }
     button {
       margin-top: 1rem;
       padding: 0.5rem 1rem;
       font-size: 1rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h1>Tạo Avatar 20 năm THPT Chuyên Vĩnh Phúc</h1>
-  <p>Upload ảnh cá nhân của bạn để tạo avatar có khung kỷ niệm 20 năm.</p>
 
-  <input type="file" id="upload" accept="image/*">
-  <canvas id="canvas" width="768" height="768"></canvas>
+  <h2>Chọn khung ảnh</h2>
+  <div style="display: flex; justify-content: center; flex-wrap: wrap;">
+    <img src="Design.png" id="frame1" class="frame-preview selected" onclick="selectFrame('Design.png', this)">
+    <img src="Design2.png" id="frame2" class="frame-preview" onclick="selectFrame('Design2.png', this)">
+    <img src="Design_M.png" id="frame1" class="frame-preview selected" onclick="selectFrame('Design_M.png', this)">
+    <img src="Design_v2.png" id="frame2" class="frame-preview" onclick="selectFrame('Design_v2.png', this)">
+  </div>
+
+  <div class="file-upload">
+    <label for="uploadInput" class="file-upload-label">Chọn ảnh của bạn</label>
+    <input type="file" accept="image/*" id="uploadInput" onchange="handleUpload(event)">
+  </div>
+
+  <canvas id="previewCanvas"></canvas>
   <br>
-  <button onclick="downloadImage()">Tải Avatar Về</button>
+  <button onclick="downloadImage()">Tải ảnh xuống</button>
 
   <script>
-    const upload = document.getElementById('upload');
-    const canvas = document.getElementById('canvas');
+    let selectedFrame = 'frame1.png';
+    const canvas = document.getElementById('previewCanvas');
     const ctx = canvas.getContext('2d');
+    const userImage = new Image();
+    const frameImage = new Image();
+    let userUploaded = false;
 
-    const frame = new Image();
-    frame.src = 'Design.png'; // Đường dẫn file khung bạn đã upload
+    function selectFrame(frameSrc, element) {
+      selectedFrame = frameSrc;
+      document.querySelectorAll('.frame-preview').forEach(el => el.classList.remove('selected'));
+      element.classList.add('selected');
+      if (userUploaded) drawCanvas();
+    }
 
-    upload.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-
-      reader.onload = function(event) {
-        const img = new Image();
-        img.onload = function() {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-          const size = Math.min(img.width, img.height);
-          const sx = (img.width - size) / 2;
-          const sy = (img.height - size) / 2;
-          ctx.drawImage(img, sx, sy, size, size, 0, 0, canvas.width, canvas.height);
-
-          frame.onload = () => {
-            ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
-          }
-          if (frame.complete) ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
-        }
-        img.src = event.target.result;
+    function handleUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          userImage.src = e.target.result;
+          userUploaded = true;
+          userImage.onload = () => drawCanvas();
+        };
+        reader.readAsDataURL(file);
       }
-      reader.readAsDataURL(file);
-    });
+    }
+
+    function drawCanvas() {
+      canvas.width = 800;
+      canvas.height = 800;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const imgAspect = userImage.width / userImage.height;
+      const canvasAspect = canvas.width / canvas.height;
+      let sx, sy, sWidth, sHeight;
+
+      if (imgAspect > canvasAspect) {
+        // ảnh ngang hơn canvas
+        sHeight = userImage.height;
+        sWidth = sHeight * canvasAspect;
+        sx = (userImage.width - sWidth) / 2;
+        sy = 0;
+      } else {
+        // ảnh dọc hơn canvas hoặc bằng tỉ lệ
+        sWidth = userImage.width;
+        sHeight = sWidth / canvasAspect;
+        sx = 0;
+        sy = (userImage.height - sHeight) / 2;
+      }
+
+      ctx.drawImage(userImage, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
+
+      frameImage.src = selectedFrame;
+      frameImage.onload = () => {
+        ctx.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
+      };
+    }
 
     function downloadImage() {
       const link = document.createElement('a');
-      link.download = 'avatar-20nam.png';
-      link.href = canvas.toDataURL();
+      link.download = 'anh-ky-niem.png';
+      link.href = canvas.toDataURL('image/png');
       link.click();
     }
   </script>
+
 </body>
 </html>
